@@ -181,6 +181,47 @@
       color: var(--muted);
     }
     .scale-labels span:last-child { text-align: right; }
+    /* Radio options */
+    .options {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .option {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--bg);
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+      font-size: 15px;
+    }
+    .option:hover { border-color: #c7c9d1; }
+    .option input {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border: 1.5px solid #c7c9d1;
+      border-radius: 50%;
+      margin: 0;
+      flex-shrink: 0;
+      position: relative;
+      cursor: pointer;
+      transition: border-color .15s;
+    }
+    .option input:checked {
+      border-color: var(--accent);
+      border-width: 5px;
+    }
+    .option:has(input:checked) {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+    .option span { flex: 1; }
     .submit-row {
       margin-top: 32px;
       display: flex;
@@ -294,54 +335,29 @@
     }
 
     function renderChoice(q, idx) {
-      const n = q.options.length;
-      const labelEl = el('span', { class: 'selected-label placeholder' }, 'Cevap için kaydırın');
-      const slider = el('input', {
-        type: 'range',
-        class: 'slider',
-        min: 1,
-        max: n,
-        step: 1,
-        'data-idx': idx,
-        'data-kind': 'choice',
+      const wrap = el('div', { class: 'options', 'data-idx': idx, 'data-kind': 'choice' });
+      const name = `q_${idx}`;
+      q.options.forEach((opt, i) => {
+        const input = el('input', {
+          type: 'radio',
+          name,
+          value: String(i + 1),
+        });
+        input.addEventListener('change', () => {
+          wrap.dataset.touched = '1';
+          wrap.dataset.value = String(i + 1);
+          updateProgress();
+        });
+        const label = el('label', { class: 'option' },
+          input,
+          el('span', {}, opt),
+        );
+        wrap.appendChild(label);
       });
-      slider.value = '';
-      let touched = false;
-
-      const ticks = el('div', { class: 'ticks' });
-      for (let i = 0; i < n; i++) {
-        ticks.appendChild(el('span', {}, el('i', {}, String(i + 1))));
-      }
-
-      function update() {
-        if (!touched) return;
-        const v = parseInt(slider.value, 10);
-        labelEl.textContent = q.options[v - 1];
-        labelEl.classList.remove('placeholder');
-      }
-      slider.addEventListener('input', () => {
-        touched = true;
-        slider.dataset.touched = '1';
-        update();
-        updateProgress();
-      });
-      slider.addEventListener('change', () => {
-        touched = true;
-        slider.dataset.touched = '1';
-        update();
-        updateProgress();
-      });
-
-      // Default position: middle but mark as untouched
-      slider.value = String(Math.ceil(n / 2));
 
       return el('div', { class: 'card' },
         el('p', { class: 'q-title' }, q.title),
-        el('div', { class: 'slider-wrap' },
-          labelEl,
-          slider,
-          ticks,
-        ),
+        wrap,
       );
     }
 
@@ -438,7 +454,7 @@
           answers.push({ q: q.title, value: node.value.trim() || null });
         } else if (q.kind === 'choice') {
           if (node.dataset.touched === '1') {
-            const v = parseInt(node.value, 10);
+            const v = parseInt(node.dataset.value, 10);
             answers.push({ q: q.title, value: q.options[v - 1], score: v });
           } else {
             answers.push({ q: q.title, value: null });
