@@ -74,7 +74,23 @@
       border-radius: var(--radius);
       padding: 22px 22px 24px;
       margin: 14px 0;
+      transition: border-color .2s, box-shadow .2s;
     }
+    .card.error {
+      border-color: #dc2626;
+      box-shadow: 0 0 0 3px rgba(220, 38, 38, .12);
+    }
+    .error-banner {
+      display: none;
+      background: #fee2e2;
+      border: 1px solid #fecaca;
+      color: #991b1b;
+      padding: 12px 14px;
+      border-radius: 10px;
+      margin-top: 16px;
+      font-size: 14px;
+    }
+    .error-banner.show { display: block; }
     .card .q-title {
       font-size: 15px;
       line-height: 1.45;
@@ -252,21 +268,6 @@
       margin: 0 0 12px;
       font-size: 20px;
     }
-    #result .scores {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 8px;
-      margin-top: 14px;
-    }
-    #result .score-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 10px 12px;
-      background: var(--accent-soft);
-      border-radius: 8px;
-      font-size: 14px;
-    }
-    #result .score-row b { font-weight: 600; }
     @media (max-width: 540px) {
       main { padding: 28px 14px 60px; }
       header.intro h1 { font-size: 22px; }
@@ -289,6 +290,8 @@
     </header>
 
     <form id="survey"></form>
+
+    <div id="errorBanner" class="error-banner" role="alert"></div>
 
     <div class="submit-row">
       <span id="submitStatus" style="margin-right:14px;color:var(--muted);font-size:14px;align-self:center;"></span>
@@ -323,6 +326,11 @@
       return node;
     }
 
+    function clearError(node) {
+      const card = node.closest('.card');
+      if (card) card.classList.remove('error');
+    }
+
     function renderText(q, idx) {
       const input = el('input', {
         type: 'text',
@@ -331,7 +339,10 @@
         placeholder: 'Cevabınız',
         autocomplete: 'off',
       });
-      input.addEventListener('input', updateProgress);
+      input.addEventListener('input', () => {
+        if (input.value.trim() !== '') clearError(input);
+        updateProgress();
+      });
       return el('div', { class: 'card' },
         el('p', { class: 'q-title' }, q.title),
         input,
@@ -350,6 +361,7 @@
         input.addEventListener('change', () => {
           wrap.dataset.touched = '1';
           wrap.dataset.value = String(i + 1);
+          clearError(wrap);
           updateProgress();
         });
         const label = el('label', { class: 'option' },
@@ -390,6 +402,7 @@
       }
       slider.addEventListener('input', () => {
         slider.dataset.touched = '1';
+        clearError(slider);
         update();
         updateProgress();
       });
@@ -484,32 +497,31 @@
       return answers;
     }
 
-    function computeScores(answers) {
-      const sectionRanges = [];
-      let current = null;
+    const statusEl = document.getElementById('submitStatus');
+    const errorBanner = document.getElementById('errorBanner');
+
+    function findUnanswered() {
+      const missing = [];
       QUESTIONS.forEach((q, i) => {
-        if (q.kind === 'section') {
-          if (current) sectionRanges.push(current);
-          current = { title: q.title, start: i + 1, end: i + 1, sum: 0, count: 0, max: 0 };
-        } else if (current) {
-          current.end = i + 1;
-          if (q.kind === 'choice' || q.kind === 'scale') {
-            const a = answers[i];
-            const maxVal = q.kind === 'choice' ? q.options.length : q.max;
-            current.max += maxVal;
-            current.count += 1;
-            if (a && a.value != null) {
-              const score = q.kind === 'choice' ? a.score : a.value;
-              current.sum += score;
-            }
-          }
+        if (q.kind === 'section') return;
+        const node = form.querySelector(`[data-idx="${i}"]`);
+        if (!node) return;
+        let empty = false;
+        if (q.kind === 'text') {
+          empty = node.value.trim() === '';
+        } else {
+          empty = node.dataset.touched !== '1';
         }
+        if (empty) missing.push({ node, title: q.title });
       });
-      if (current) sectionRanges.push(current);
-      return sectionRanges;
+      return missing;
     }
 
-    const statusEl = document.getElementById('submitStatus');
+    function clearAllErrors() {
+      form.querySelectorAll('.card.error').forEach(c => c.classList.remove('error'));
+      errorBanner.classList.remove('show');
+      errorBanner.textContent = '';
+    }
 
     async function sendToBackend(answers) {
       if (!SUBMIT_ENDPOINT || SUBMIT_ENDPOINT.startsWith('__')) {
@@ -533,8 +545,23 @@
     }
 
     submitBtn.addEventListener('click', async () => {
+      clearAllErrors();
+
+      const missing = findUnanswered();
+      if (missing.length > 0) {
+        missing.forEach(m => {
+          const card = m.node.closest('.card');
+          if (card) card.classList.add('error');
+        });
+        errorBanner.textContent = `Lütfen tüm soruları cevaplayın. ${missing.length} soru boş bırakıldı.`;
+        errorBanner.classList.add('show');
+        const firstCard = missing[0].node.closest('.card');
+        if (firstCard) firstCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        statusEl.textContent = '';
+        return;
+      }
+
       const answers = collectAnswers();
-      const sections = computeScores(answers);
 
       submitBtn.disabled = true;
       statusEl.textContent = 'Gönderiliyor…';
@@ -548,25 +575,13 @@
       } else {
         statusEl.textContent = 'Gönderim hatası — tekrar deneyin';
         submitBtn.disabled = false;
+        return;
       }
 
       resultEl.innerHTML = '';
-      resultEl.appendChild(el('h2', {}, 'Teşekkürler!'));
-      resultEl.appendChild(el('p', { style: 'color:var(--muted);margin:0 0 8px;font-size:14px' },
-        'Cevaplarınız aşağıdaki bölümlerde özetlenmiştir. (Bu hesaplama yalnızca bilgilendirme amaçlıdır.)'));
-
-      const scoresWrap = el('div', { class: 'scores' });
-      sections.forEach(s => {
-        if (s.count === 0) return;
-        const sumStr = Number.isInteger(s.sum) ? String(s.sum) : s.sum.toFixed(1);
-        scoresWrap.appendChild(
-          el('div', { class: 'score-row' },
-            el('span', {}, s.title),
-            el('b', {}, `${sumStr} / ${s.max}`),
-          )
-        );
-      });
-      resultEl.appendChild(scoresWrap);
+      resultEl.appendChild(el('h2', {}, 'Katılımınız için teşekkürler'));
+      resultEl.appendChild(el('p', { style: 'color:var(--muted);margin:0;font-size:15px' },
+        'Cevaplarınız iletildi.'));
 
       resultEl.style.display = 'block';
       resultEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
