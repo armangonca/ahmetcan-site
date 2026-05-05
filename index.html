@@ -1,0 +1,510 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Fırlatma Sporcuları için Fonksiyonel Kol Ölçeği</title>
+  <style>
+    :root {
+      --bg: #fafafa;
+      --card: #ffffff;
+      --ink: #111111;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --accent: #111111;
+      --accent-soft: #f3f4f6;
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+    .progress-bar {
+      position: sticky;
+      top: 0;
+      height: 3px;
+      background: var(--line);
+      z-index: 50;
+    }
+    .progress-bar > span {
+      display: block;
+      height: 100%;
+      width: 0%;
+      background: var(--accent);
+      transition: width .25s ease;
+    }
+    main {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 48px 20px 80px;
+    }
+    header.intro {
+      margin-bottom: 32px;
+    }
+    header.intro h1 {
+      font-size: 28px;
+      letter-spacing: -0.02em;
+      margin: 0 0 12px;
+      font-weight: 700;
+    }
+    header.intro p {
+      color: var(--muted);
+      font-size: 15px;
+      margin: 0;
+    }
+    .section-divider {
+      margin: 40px 0 16px;
+      padding-top: 24px;
+      border-top: 1px solid var(--line);
+    }
+    .section-divider h2 {
+      font-size: 18px;
+      margin: 0;
+      letter-spacing: -0.01em;
+      font-weight: 600;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 22px 22px 24px;
+      margin: 14px 0;
+    }
+    .card .q-title {
+      font-size: 15px;
+      line-height: 1.45;
+      margin: 0 0 18px;
+      font-weight: 500;
+    }
+    /* Text input */
+    .text-input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      font-size: 15px;
+      font-family: inherit;
+      background: var(--bg);
+      color: var(--ink);
+      outline: none;
+      transition: border-color .15s;
+    }
+    .text-input:focus {
+      border-color: var(--accent);
+    }
+    /* Slider */
+    .slider-wrap {
+      padding: 4px 4px 0;
+    }
+    .selected-label {
+      display: block;
+      font-size: 14px;
+      color: var(--ink);
+      font-weight: 600;
+      margin-bottom: 14px;
+      min-height: 20px;
+    }
+    .selected-label.placeholder {
+      color: var(--muted);
+      font-weight: 400;
+    }
+    .slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 6px;
+      background: var(--line);
+      border-radius: 999px;
+      outline: none;
+      margin: 8px 0 6px;
+      cursor: pointer;
+    }
+    .slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 22px;
+      height: 22px;
+      background: var(--accent);
+      border-radius: 50%;
+      border: 3px solid #fff;
+      box-shadow: 0 0 0 1px var(--accent), 0 1px 4px rgba(0,0,0,.15);
+      cursor: grab;
+    }
+    .slider::-webkit-slider-thumb:active { cursor: grabbing; }
+    .slider::-moz-range-thumb {
+      width: 22px;
+      height: 22px;
+      background: var(--accent);
+      border-radius: 50%;
+      border: 3px solid #fff;
+      box-shadow: 0 0 0 1px var(--accent);
+      cursor: grab;
+    }
+    .ticks {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 2px;
+      padding: 0 2px;
+    }
+    .ticks span {
+      font-size: 11px;
+      color: var(--muted);
+      width: 1px;
+      position: relative;
+    }
+    .ticks span::before {
+      content: "";
+      position: absolute;
+      top: -10px;
+      left: 0;
+      width: 1px;
+      height: 6px;
+      background: var(--line);
+    }
+    .ticks span > i {
+      font-style: normal;
+      position: absolute;
+      top: 4px;
+      transform: translateX(-50%);
+    }
+    .scale-labels {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 18px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .scale-labels span:last-child { text-align: right; }
+    .submit-row {
+      margin-top: 32px;
+      display: flex;
+      justify-content: flex-end;
+    }
+    .btn {
+      background: var(--accent);
+      color: white;
+      border: 0;
+      padding: 12px 22px;
+      font-size: 15px;
+      font-weight: 600;
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .btn:hover { opacity: .9; }
+    /* Result */
+    #result {
+      display: none;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 28px;
+      margin-top: 24px;
+    }
+    #result h2 {
+      margin: 0 0 12px;
+      font-size: 20px;
+    }
+    #result .scores {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      margin-top: 14px;
+    }
+    #result .score-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 12px;
+      background: var(--accent-soft);
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    #result .score-row b { font-weight: 600; }
+    @media (max-width: 540px) {
+      main { padding: 28px 14px 60px; }
+      header.intro h1 { font-size: 22px; }
+      .card { padding: 18px; }
+      .ticks span > i { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="progress-bar"><span id="progress"></span></div>
+  <main>
+    <header class="intro">
+      <h1>Fırlatma Sporcuları için Fonksiyonel Kol Ölçeği</h1>
+      <p>
+        Bu anket, Hacettepe Üniversitesi Spor Fizyoterapistliği Tezi kapsamında
+        FAST-TR anketinin geçerlilik ve güvenirliğini değerlendirmek amacıyla
+        hazırlanmıştır. Anketi cevaplamanız 10–15 dakika sürecek olup verdiğiniz
+        cevaplar tamamen gizli tutulacaktır. Katılımınız için teşekkür ederiz.
+      </p>
+    </header>
+
+    <form id="survey"></form>
+
+    <div class="submit-row">
+      <button type="button" class="btn" id="submitBtn">Gönder</button>
+    </div>
+
+    <section id="result" aria-live="polite"></section>
+  </main>
+
+  <script>
+    const QUESTIONS = [{"kind":"text","title":"Ad Soyad"},{"kind":"choice","title":"Aşağıdaki spor dallarından hangisini yaptığınızı seçiniz.","options":["Voleybol","Tenis","Badminton","Su topu","Amerikan Futbolu","Hentbol","Beyzbol","Kriket"]},{"kind":"choice","title":"Omuz ağrınız var mı?","options":["Omuz problemim yok, spora devam ediyorum.","Omuz problemim var, spora deva edemiyorum.","Omuz problemim var /omuz problemim vardı, ancak spora devam ediyorum"]},{"kind":"choice","title":"Cinsiyet","options":["Kadın","Erkek"]},{"kind":"text","title":"Yaş"},{"kind":"text","title":"Boy Uzunluğu(m)"},{"kind":"text","title":"Vücut Ağırlığı(kg)"},{"kind":"choice","title":"En son mezun olduğunuz eğitim düzeyi nedir?","options":["İlkokul/Ortaokul","Lise","Ön Lisans","Lisans","Yüksek Lisans/Doktora"]},{"kind":"text","title":"Spor Deneyimi (yıl)"},{"kind":"choice","title":"Spor Seviyesi","options":["Başlangıç Seviyesi (Beginner):","Orta Seviye (Intermediate)","İleri Seviye (Advanced)"]},{"kind":"text","title":"Son 1 hafta içerisindeki toplam antrenman süreniz nedir?"},{"kind":"scale","title":"Son 1 hafta içerisindeki antrenmanlarınızı göz önünde bulundurarak, ne kadar zorlandığınızı değerlendiriniz.","min":1,"max":10,"labels":["Hiç","Çok zor / maksimum"]},{"kind":"text","title":"Son 1 ay içerisindeki toplam antrenman süreniz nedir?"},{"kind":"scale","title":"Son 1 ay içerisindeki antrenmanlarınızı göz önünde bulundurarak, ne kadar zorlandığınızı değerlendiriniz.","min":1,"max":10,"labels":["Hiç","Çok zor/maksimum"]},{"kind":"section","title":"Fırlatma Sporcuları için Fonksiyonel Kol Ölçeği"},{"kind":"choice","title":"1. Kolunuzun şu anki halinden ne kadar memnunsunuz?","options":["Tamamen memnunum","Aşırı memnunum","Orta düzeyde memnunum","Biraz memnunum","Hiç memnun değilim"]},{"kind":"choice","title":"2. Isındıktan sonra, atışa (maça/egzersize/spora) başlamadan önce etkilenmiş kolunuzda ne kadar ağrı hissediyorsunuz?","options":["Hiç yok","Hafif düzeyde","Orta düzeyde","Şiddetli","Çok şiddetli düzeyde"]},{"kind":"choice","title":"3. Geceleri kolunuzda ne düzeyde ağrı veya rahatsızlık hissediyorsunuz?","options":["Hiç yok","Hafif düzeyde","Orta düzeyde","Şiddetli","Çok şiddetli düzeyde"]},{"kind":"choice","title":"4. Kolunuzdaki yaralanma/problem sonucunda kolunuzda ne kadar kuvvet kaybı yaşadınız?","options":["Hiç yok","Hafif düzeyde","Orta düzeyde","Şiddetli","Çok şiddetli düzeyde"]},{"kind":"choice","title":"5. Uzanma içeren gündelik aktiviteler sırasında kolunuzda ne kadar ağrı veya rahatsızlık olur?","options":["Hiç yok","Hafif düzeyde","Orta düzeyde","Şiddetli","Çok şiddetli düzeyde"]},{"kind":"choice","title":"6. Kolunuzu 30 dakikadan uzun süren aktivitelerde kullanırsanız, kolunuzda ne kadar ağrı veya rahatsızlık olur?","options":["Hiç yok","Hafif düzeyde","Orta düzeyde","Şiddetli","Çok şiddetli düzeyde"]},{"kind":"choice","title":"7.  Kol yaralanmanız/probleminiz,  sporunuzda ilerleme yeteneğinizi ne ölçüde kısıtladı?","options":["Hiç","Biraz","Orta düzeyde","Çok","Aşırı"]},{"kind":"choice","title":"8.   Kol yaralanmanızın/probleminizin daha da kötüleşmemesi için davranışlarınızı ne kadar değiştirdiniz?","options":["Hiç","Biraz","Orta düzeyde","Çok","Aşırı"]},{"kind":"choice","title":"9.  Kolunuzki yaralanmanın/problemin başlangıcından bu yana, hayata karşı daha olumsuz bakış açınız oldu mu?","options":["Hiç","Biraz","Orta düzeyde","Çok","Aşırı"]},{"kind":"choice","title":"10.  Kol yaralanmanız/probleminiz, spor dışında, sizin için önemli şeyleri ne kadar etkiliyor?","options":["Hiç","Biraz","Orta düzeyde","Çok","Aşırı"]},{"kind":"choice","title":"11.  Geceleri kolunuz ne kadar sert/katıdır?","options":["Hiç","Biraz","Orta düzeyde","Çok","Aşırı"]},{"kind":"choice","title":"12.  Kolunuzda yaralanma /problem olduğundan bu yana oyun süreniz ne kadar azaldı?","options":["Hiç","Biraz","Orta düzeyde","Çok","Aşırı"]},{"kind":"choice","title":"13. Giyinmek için kolunuzu başınızın üzerine kaldırdığınızda ne kadar kısıtlanıyorsunuz?","options":["Hiç","Biraz","Orta düzeyde","Çok","Aşırı"]},{"kind":"choice","title":"14. Kolunuzda yaralanma /problem olduğundan beri hayattan aldığınız keyif azaldı mı?","options":["Hayır","Evet, hafif düzeyde","Evet, orta düzeyde","Evet, ciddi düzeyde","Evet, aşırı derecede"]},{"kind":"choice","title":"15. Kolunuzdaki yaralanma/problem tek bir antrenman veya maç sırasında atışa devam edebilme sürenizi azalttı mı?","options":["Hayır","Evet, hafif düzeyde","Evet, orta düzeyde","Evet, ciddi düzeyde","Evet, aşırı derecede"]},{"kind":"choice","title":"16. Kolunuzda yaralanma /problem olduğundan bu yana sportif başarılarınız azaldı mı?","options":["Hayır","Evet, hafif düzeyde","Evet, orta düzeyde","Evet, ciddi düzeyde","Evet, aşırı derecede"]},{"kind":"choice","title":"17.  Kolunuzdaki yaralanma/problem sebebiyle hayatınız daha stresli hale geldi mi?","options":["Hayır","Evet, hafif düzeyde","Evet, orta düzeyde","Evet, ciddi düzeyde","Evet, aşırı derecede"]},{"kind":"choice","title":"18. Kolunuzdaki yaralanma/problem “uzak mesafeye atış/fırlatma(servis, smaç, clear, şut)  ” yapabilme yeteneğinizi ne kadar kısıtladı?","options":["Hiç","Biraz","Orta düzeyde","Çok","Fırlatma yapamıyorum"]},{"kind":"choice","title":"19. Kolunuzda yaralanma /problem olduğundan  bu yana beri atış isabet oranınız ne ölçüde azaldı?","options":["Hiç","Biraz","Orta düzeyde","Çok","Fırlatma yapamıyorum"]},{"kind":"choice","title":"20. Atış/fırlatma (servis, smaç, clear, şut)  sırasında kolunuzu ne kadar zayıf hissediyorsunuz?","options":["Hiç","Biraz","Orta düzeyde","Çok","Fırlatma yapamıyorum"]},{"kind":"choice","title":"21. Maç temposunda/makisumum eforla atış/fırlatma (servis, smaç, clear, şut)  yaparken kolunuz ne kadar ağrılıdır?","options":["Hiç","Biraz","Orta düzeyde","Çok","Fırlatma yapamıyorum"]},{"kind":"choice","title":"%50–75 eforda atış/fırlatma yaparken kolunuz ne kadar ağrılıdır?","options":["Hiç","Biraz","Orta düzeyde","Çok","Fırlatma yapamıyorum"]},{"kind":"section","title":"Atıcı, Şutör, Smaçör Modülü"},{"kind":"choice","title":"A1. Kolunuzdaki yaralanma atış hızınızı ne kadar kısıtladı?","options":["Hiç","Biraz","Orta Düzeyde","Çok","Yapamıyorum"]},{"kind":"choice","title":"A2. Kolunuzdaki yaralanma “ısınma atışlarınızı” gerçekleştirebilmenizi ne kadar kısıtladı?","options":["Hiç","Biraz","Orta Düzeyde","Çok","Yapamıyorum"]},{"kind":"choice","title":"A3. Kolunuzdaki yaralanma hedeflediğiniz noktaları ‘isabetleme’ yeteneğinizi  ne kadar kısıtladı?","options":["Hiç","Biraz","Orta Düzeyde","Çok","Yapamıyorum"]},{"kind":"choice","title":"A4. Atış yapmak için sahaya/yarışa girme sırası  (rotasyon sırası) size  geldiğinde atış yapabilme yeteneğiniz ne kadar kısıtlandı?","options":["Hiç","Biraz","Orta Düzeyde","Çok","Yapamıyorum"]},{"kind":"choice","title":"A5. Kolunuzdaki yaralanma sonrasında genel olarak atış yapma istatistikleriniz ne ölçüde olumsuz etkilendi?","options":["Hiç","Biraz","Orta Düzeyde","Çok","Yapamıyorum"]},{"kind":"choice","title":"A6. Kolunuzdaki yaralanma sebebiyle toplam atış sayısınız ne kadar azaldı?","options":["Hiç","Biraz","Orta Düzeyde","Çok","Yapamıyorum"]},{"kind":"choice","title":"A7. Kolunuzdaki yaralanma farklı tiplerde atışları yapabilme yeteneğinizi ne kadar kısıtladı?","options":["Hiç","Biraz","Orta Düzeyde","Çok","Yapamıyorum"]},{"kind":"choice","title":"A8. Kolunuzdaki yaralanmadan sonra atış ‘hissinde’ bir azalma oldu mu?","options":["Hiç","Biraz","Orta Düzeyde","Çok","Yapamıyorum"]},{"kind":"choice","title":"A9.Kolunuzdaki problemin başlangıcından  sonra maç/yarış sırasındanki  sahada geçirilen süre dışında saha kenarında toparlanmak için daha fazla zamana ihtiyaç duyuyor musunuz ?","options":["Hiç","Biraz","Orta Düzeyde","Çok","Yapamıyorum"]},{"kind":"section","title":"Kerlan-Jobe Omuz ve Dirsek Skoru"},{"kind":"scale","title":"1.    Antrenman ya da müsabaka öncesinde gevşemek ya da ısınmak sizin için ne kadar zordur?","min":1,"max":10,"labels":["Antrenman ya da müsabaka süresince asla gevşemiş hissedilmez ","Normal ısınma süresi"]},{"kind":"scale","title":"2.    Omzunuzda ya da dirseğinizde ne kadar ağrı hissediyorsunuz?","min":1,"max":10,"labels":["",""]},{"kind":"scale","title":"3. Omzunuzda ya da dirseğinizde ne kadar zayıflık ve/veya yorgunluk (ör. kuvvet kaybı) hissediyorsunuz","min":1,"max":10,"labels":["Müsabakayı engelleyen zayıflık ya da yorgunluk","Zayıflık yok,normal müsabaka yorgunluğu"]},{"kind":"scale","title":"4. Müsabaka sırasında omzunuzu ya da dirseğinizi ne kadar güvensiz hissederdiniz?","min":1,"max":10,"labels":["",""]},{"kind":"scale","title":"5.Kolunuzdaki problemler antrenör, yönetim ve görevlilerle ilişkilerinizi ne kadar etkiledi?","min":1,"max":10,"labels":["Takımdan ayrılma,takas, sözleşme feshi ya da burs kaybı","Hiç etkilemedi"]},{"kind":"scale","title":"6.  Kolunuzdan dolayı fırlatma, servis, smaç gibi hareketlerde ne kadar değişiklik yapmak zorunda kaldınız?","min":1,"max":10,"labels":["Tamamen değişti, hareketi artık yapamıyor","Hareket değişikliği yok"]},{"kind":"scale","title":"7.Kolunuzdan dolayı hızınız ve/veya gücünüz ne kadar zarar gördü?","min":1,"max":10,"labels":["Tüm güçte kayıp, pozisyonda değişiklik.","Hız/güç değişikliği yok"]},{"kind":"scale","title":"8.Kolunuzdan dolayı müsabaka dayanıklılığınız ne kadar azaldı?","min":1,"max":10,"labels":["Belirgin azalma(yedek oyuncu olma,örneğin daha kısa sürede yarışma)","Müsabaka dayanıklılığında azalma yok"]},{"kind":"scale","title":"9.Kolunuzdan dolayı hareket hakimiyetinde (fırlatma, servis, smaç gibi hareketlerde) ne kadar bozulma oldu?","min":1,"max":10,"labels":["Tüm fırlatma, servis, smaç gibi hareketlerde öngörülemeyen hakimiyet kaybı.","Hakimiyet kaybı yok"]},{"kind":"scale","title":"10.Kolunuzun güncel spor yarışma seviyenizi ne kadar etkilediğini düşünüyorsunuz (ör. kolunuz tüm potansiyelinizi kullanmaktan sizi alıkoyuyor mu)?","min":1,"max":10,"labels":["Yarışamıyor,spor branşını değiştirmk zorunda kalmış.","İstenilen yarışma seviyesi"]},{"kind":"section","title":"QUİCK DASH"},{"kind":"scale","title":"1-Sıkı kapatılmış yada yeni bir kavanozu açmak","min":1,"max":5,"labels":["Zorluk yok","Hiç yapamama"]},{"kind":"scale","title":"2-Ağır ev işleri yapmak(duvar silmek, yer silmek,tamirat yapmak vs.)","min":1,"max":5,"labels":["Zorluk yok","Hiç yapamama"]},{"kind":"scale","title":"3-Alışveriş çantası yada evrak çantası taşımak","min":1,"max":5,"labels":["Zorluk yok","Hiç yapamama"]},{"kind":"scale","title":"4-Sırtını yıkamak","min":1,"max":5,"labels":["Zorluk yok","Hiç yapamama"]},{"kind":"scale","title":"5-Yiyecekleri kesmek için bıçak kullanmak","min":1,"max":5,"labels":["Zorluk yok","Hiç yapamama"]},{"kind":"scale","title":"6-Kolunuzdan, omzunuzdan veya elinizden güç aldığınız veya darbe vurduğunuz eğlenceye yönelik etkinlikler (önünüzde yerde bulunan bir konserve kutusu veya küçük bir taşa iki elinizle kavradığınız bir sopayla yandan vurmak,tenis oynamak,pinpon oynamak )","min":1,"max":5,"labels":["Zorluk yok","Hiç yapamama"]},{"kind":"scale","title":"7-Son hafta süresince kol omuz yada el probleminiz aile arkadaşlar, komşular veya gruplarla normal  sosyal etkinliklerinize ne ölçüde engel oldu ","min":1,"max":5,"labels":["Engel yok","Aşırı"]},{"kind":"scale","title":"8-Son hafta süresince kol omuz yada el sorununuz  nedeniyle işinizde yada diğer günlük etkinliklerde kısıtlandınız mı? ","min":1,"max":5,"labels":["Hiç kısıtlanmış hissetmiyorum","Bedensel etkinlik yapamyorum"]},{"kind":"scale","title":"9-El, omuz ya da kol ağrınız","min":1,"max":5,"labels":["Yok","Aşırı"]},{"kind":"scale","title":"10-El,omuz yada kolunuzdaki karıncalanma(iğnelenme) ","min":1,"max":5,"labels":["Yok","Aşırı"]},{"kind":"scale","title":"11-Geçen hafta içinde el, omuz yada kol ağrınız nedeniyle uyumada ne kadar zorlandınız ?","min":1,"max":5,"labels":["Zorluk yok","O kadar zorluk var ki uyuyamıyorum"]},{"kind":"section","title":"SPORCU MODÜLÜ"},{"kind":"scale","title":"1-Spor yaparken eski tekniğinizi kullanmada zorluğunuz oldu mu ? ","min":1,"max":5,"labels":["Zorluk yok","Hiç yapamama"]},{"kind":"scale","title":"2-Kolunuz, omzunuz ve el ağrınız nedeniyle  eskisi gibi  spor yapmada zorluğunuz oldu mu?","min":1,"max":5,"labels":["Zorluk yok","Hiç yapamama"]},{"kind":"scale","title":"3-İstediğiniz kadar iyi spor yapmada zorluğunuz oldu mu? ","min":1,"max":5,"labels":["Zorluk yok","Hiç yapamama"]},{"kind":"scale","title":"4- Her zamanki süre kadar  spor yaparken zorluğunuz oldu mu","min":1,"max":5,"labels":["Zorluk yok","Hiç yapamama"]}];
+
+    const form = document.getElementById('survey');
+    const progressEl = document.getElementById('progress');
+    const resultEl = document.getElementById('result');
+    const submitBtn = document.getElementById('submitBtn');
+
+    function el(tag, attrs = {}, ...children) {
+      const node = document.createElement(tag);
+      for (const [k, v] of Object.entries(attrs)) {
+        if (k === 'class') node.className = v;
+        else if (k.startsWith('on')) node.addEventListener(k.slice(2), v);
+        else if (v !== false && v != null) node.setAttribute(k, v);
+      }
+      for (const c of children.flat()) {
+        if (c == null) continue;
+        node.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
+      }
+      return node;
+    }
+
+    function renderText(q, idx) {
+      const input = el('input', {
+        type: 'text',
+        class: 'text-input',
+        'data-idx': idx,
+        placeholder: 'Cevabınız',
+        autocomplete: 'off',
+      });
+      input.addEventListener('input', updateProgress);
+      return el('div', { class: 'card' },
+        el('p', { class: 'q-title' }, q.title),
+        input,
+      );
+    }
+
+    function renderChoice(q, idx) {
+      const n = q.options.length;
+      const labelEl = el('span', { class: 'selected-label placeholder' }, 'Cevap için kaydırın');
+      const slider = el('input', {
+        type: 'range',
+        class: 'slider',
+        min: 1,
+        max: n,
+        step: 1,
+        'data-idx': idx,
+        'data-kind': 'choice',
+      });
+      slider.value = '';
+      let touched = false;
+
+      const ticks = el('div', { class: 'ticks' });
+      for (let i = 0; i < n; i++) {
+        ticks.appendChild(el('span', {}, el('i', {}, String(i + 1))));
+      }
+
+      function update() {
+        if (!touched) return;
+        const v = parseInt(slider.value, 10);
+        labelEl.textContent = q.options[v - 1];
+        labelEl.classList.remove('placeholder');
+      }
+      slider.addEventListener('input', () => {
+        touched = true;
+        slider.dataset.touched = '1';
+        update();
+        updateProgress();
+      });
+      slider.addEventListener('change', () => {
+        touched = true;
+        slider.dataset.touched = '1';
+        update();
+        updateProgress();
+      });
+
+      // Default position: middle but mark as untouched
+      slider.value = String(Math.ceil(n / 2));
+
+      return el('div', { class: 'card' },
+        el('p', { class: 'q-title' }, q.title),
+        el('div', { class: 'slider-wrap' },
+          labelEl,
+          slider,
+          ticks,
+        ),
+      );
+    }
+
+    function renderScale(q, idx) {
+      const n = q.max - q.min + 1;
+      const valueEl = el('span', { class: 'selected-label placeholder' }, 'Cevap için kaydırın');
+      const slider = el('input', {
+        type: 'range',
+        class: 'slider',
+        min: q.min,
+        max: q.max,
+        step: 1,
+        'data-idx': idx,
+        'data-kind': 'scale',
+      });
+      const ticks = el('div', { class: 'ticks' });
+      for (let i = 0; i < n; i++) {
+        ticks.appendChild(el('span', {}, el('i', {}, String(q.min + i))));
+      }
+      function update() {
+        if (slider.dataset.touched !== '1') return;
+        valueEl.textContent = `Seçilen: ${slider.value} / ${q.max}`;
+        valueEl.classList.remove('placeholder');
+      }
+      slider.addEventListener('input', () => {
+        slider.dataset.touched = '1';
+        update();
+        updateProgress();
+      });
+      slider.value = String(Math.ceil((q.min + q.max) / 2));
+
+      const labelsRow = el('div', { class: 'scale-labels' },
+        el('span', {}, q.labels[0] || `${q.min}`),
+        el('span', {}, q.labels[1] || `${q.max}`),
+      );
+      return el('div', { class: 'card' },
+        el('p', { class: 'q-title' }, q.title),
+        el('div', { class: 'slider-wrap' },
+          valueEl,
+          slider,
+          ticks,
+          labelsRow,
+        ),
+      );
+    }
+
+    function renderSection(q) {
+      return el('div', { class: 'section-divider' },
+        el('h2', {}, q.title),
+      );
+    }
+
+    QUESTIONS.forEach((q, i) => {
+      let node;
+      if (q.kind === 'section') node = renderSection(q);
+      else if (q.kind === 'text') node = renderText(q, i);
+      else if (q.kind === 'choice') node = renderChoice(q, i);
+      else if (q.kind === 'scale') node = renderScale(q, i);
+      if (node) form.appendChild(node);
+    });
+
+    function answeredCount() {
+      let answered = 0;
+      QUESTIONS.forEach((q, i) => {
+        if (q.kind === 'section') return;
+        const node = form.querySelector(`[data-idx="${i}"]`);
+        if (!node) return;
+        if (q.kind === 'text') {
+          if (node.value.trim() !== '') answered++;
+        } else {
+          if (node.dataset.touched === '1') answered++;
+        }
+      });
+      return answered;
+    }
+
+    function totalAnswerable() {
+      return QUESTIONS.filter(q => q.kind !== 'section').length;
+    }
+
+    function updateProgress() {
+      const a = answeredCount();
+      const t = totalAnswerable();
+      progressEl.style.width = `${Math.round((a / t) * 100)}%`;
+    }
+
+    function collectAnswers() {
+      const answers = [];
+      QUESTIONS.forEach((q, i) => {
+        if (q.kind === 'section') return;
+        const node = form.querySelector(`[data-idx="${i}"]`);
+        if (!node) return;
+        if (q.kind === 'text') {
+          answers.push({ q: q.title, value: node.value.trim() || null });
+        } else if (q.kind === 'choice') {
+          if (node.dataset.touched === '1') {
+            const v = parseInt(node.value, 10);
+            answers.push({ q: q.title, value: q.options[v - 1], score: v });
+          } else {
+            answers.push({ q: q.title, value: null });
+          }
+        } else if (q.kind === 'scale') {
+          if (node.dataset.touched === '1') {
+            answers.push({ q: q.title, value: parseInt(node.value, 10) });
+          } else {
+            answers.push({ q: q.title, value: null });
+          }
+        }
+      });
+      return answers;
+    }
+
+    function computeScores(answers) {
+      const sectionRanges = [];
+      let current = null;
+      QUESTIONS.forEach((q, i) => {
+        if (q.kind === 'section') {
+          if (current) sectionRanges.push(current);
+          current = { title: q.title, start: i + 1, end: i + 1, sum: 0, count: 0, max: 0 };
+        } else if (current) {
+          current.end = i + 1;
+          if (q.kind === 'choice' || q.kind === 'scale') {
+            const a = answers[i];
+            const maxVal = q.kind === 'choice' ? q.options.length : q.max;
+            current.max += maxVal;
+            current.count += 1;
+            if (a && a.value != null) {
+              const score = q.kind === 'choice' ? a.score : a.value;
+              current.sum += score;
+            }
+          }
+        }
+      });
+      if (current) sectionRanges.push(current);
+      return sectionRanges;
+    }
+
+    submitBtn.addEventListener('click', () => {
+      const answers = collectAnswers();
+      const sections = computeScores(answers);
+
+      resultEl.innerHTML = '';
+      resultEl.appendChild(el('h2', {}, 'Teşekkürler!'));
+      resultEl.appendChild(el('p', { style: 'color:var(--muted);margin:0 0 8px;font-size:14px' },
+        'Cevaplarınız aşağıdaki bölümlerde özetlenmiştir. (Bu hesaplama yalnızca bilgilendirme amaçlıdır.)'));
+
+      const scoresWrap = el('div', { class: 'scores' });
+      sections.forEach(s => {
+        if (s.count === 0) return;
+        scoresWrap.appendChild(
+          el('div', { class: 'score-row' },
+            el('span', {}, s.title),
+            el('b', {}, `${s.sum} / ${s.max}`),
+          )
+        );
+      });
+      resultEl.appendChild(scoresWrap);
+
+      resultEl.style.display = 'block';
+      resultEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
+    updateProgress();
+  </script>
+</body>
+</html>
