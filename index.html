@@ -291,6 +291,7 @@
     <form id="survey"></form>
 
     <div class="submit-row">
+      <span id="submitStatus" style="margin-right:14px;color:var(--muted);font-size:14px;align-self:center;"></span>
       <button type="button" class="btn" id="submitBtn">Gönder</button>
     </div>
 
@@ -298,6 +299,9 @@
   </main>
 
   <script>
+    // Apps Script web app URL — kurulum sonrası buraya yapıştır
+    const SUBMIT_ENDPOINT = 'https://script.google.com/macros/s/AKfycbzW3wFz-KZJkoo7LF3SvZzpx8KbcaCKgGmXhgSc8NV7SFX8xxrXcpVpnUNc07HvrGp4/exec';
+
     const QUESTIONS = [{"kind":"text","title":"Ad Soyad"},{"kind":"choice","title":"Aşağıdaki spor dallarından hangisini yaptığınızı seçiniz.","options":["Voleybol","Tenis","Badminton","Su topu","Amerikan Futbolu","Hentbol","Beyzbol","Kriket"]},{"kind":"choice","title":"Omuz ağrınız var mı?","options":["Omuz problemim yok, spora devam ediyorum.","Omuz problemim var, spora deva edemiyorum.","Omuz problemim var /omuz problemim vardı, ancak spora devam ediyorum"]},{"kind":"choice","title":"Cinsiyet","options":["Kadın","Erkek"]},{"kind":"text","title":"Yaş"},{"kind":"text","title":"Boy Uzunluğu(m)"},{"kind":"text","title":"Vücut Ağırlığı(kg)"},{"kind":"choice","title":"En son mezun olduğunuz eğitim düzeyi nedir?","options":["İlkokul/Ortaokul","Lise","Ön Lisans","Lisans","Yüksek Lisans/Doktora"]},{"kind":"text","title":"Spor Deneyimi (yıl)"},{"kind":"choice","title":"Spor Seviyesi","options":["Başlangıç Seviyesi (Beginner):","Orta Seviye (Intermediate)","İleri Seviye (Advanced)"]},{"kind":"text","title":"Son 1 hafta içerisindeki toplam antrenman süreniz nedir?"},{"kind":"scale","title":"Son 1 hafta içerisindeki antrenmanlarınızı göz önünde bulundurarak, ne kadar zorlandığınızı değerlendiriniz.","min":1,"max":10,"labels":["Hiç","Çok zor / maksimum"]},{"kind":"text","title":"Son 1 ay içerisindeki toplam antrenman süreniz nedir?"},{"kind":"scale","title":"Son 1 ay içerisindeki antrenmanlarınızı göz önünde bulundurarak, ne kadar zorlandığınızı değerlendiriniz.","min":1,"max":10,"labels":["Hiç","Çok zor/maksimum"]},{"kind":"section","title":"Fırlatma Sporcuları için Fonksiyonel Kol Ölçeği"},{"kind":"choice","title":"1. Kolunuzun şu anki halinden ne kadar memnunsunuz?","options":["Tamamen memnunum","Aşırı memnunum","Orta düzeyde memnunum","Biraz memnunum","Hiç memnun değilim"]},{"kind":"choice","title":"2. Isındıktan sonra, atışa (maça/egzersize/spora) başlamadan önce etkilenmiş kolunuzda ne kadar ağrı hissediyorsunuz?","options":["Hiç yok","Hafif düzeyde","Orta düzeyde","Şiddetli","Çok şiddetli düzeyde"]},{"kind":"choice","title":"3. Geceleri kolunuzda ne düzeyde ağrı veya rahatsızlık hissediyorsunuz?","options":["Hiç yok","Hafif düzeyde","Orta düzeyde","Şiddetli","Çok şiddetli düzeyde"]},{"kind":"choice","title":"4. Kolunuzdaki yaralanma/problem sonucunda kolunuzda ne kadar kuvvet kaybı yaşadınız?","options":["Hiç yok","Hafif düzeyde","Orta düzeyde","Şiddetli","Çok şiddetli düzeyde"]},{"kind":"choice","title":"5. Uzanma içeren gündelik aktiviteler sırasında kolunuzda ne kadar ağrı veya rahatsızlık olur?","options":["Hiç yok","Hafif düzeyde","Orta düzeyde","Şiddetli","Çok şiddetli düzeyde"]},{"kind":"choice","title":"6. Kolunuzu 30 dakikadan uzun süren aktivitelerde kullanırsanız, kolunuzda ne kadar ağrı veya rahatsızlık olur?","options":["Hiç yok","Hafif düzeyde","Orta düzeyde","Şiddetli","Çok şiddetli düzeyde"]},{"kind":"choice","title":"7.  Kol yaralanmanız/probleminiz,  sporunuzda ilerleme yeteneğinizi ne ölçüde kısıtladı?","options":["Hiç","Biraz","Orta düzeyde","Çok","Aşırı"]},{"kind":"choice","title":"8.   Kol yaralanmanızın/probleminizin daha da kötüleşmemesi için davranışlarınızı ne kadar değiştirdiniz?","options":["Hiç","Biraz","Orta düzeyde","Çok","Aşırı"]},{"kind":"choice","title":"9.  Kolunuzki yaralanmanın/problemin başlangıcından bu yana, hayata karşı daha olumsuz bakış açınız oldu mu?","options":["Hiç","Biraz","Orta düzeyde","Çok","Aşırı"]},{"kind":"choice","title":"10.  Kol yaralanmanız/probleminiz, spor dışında, sizin için önemli şeyleri ne kadar etkiliyor?","options":["Hiç","Biraz","Orta düzeyde","Çok","Aşırı"]},{"kind":"choice","title":"11.  Geceleri kolunuz ne kadar sert/katıdır?","options":["Hiç","Biraz","Orta düzeyde","Çok","Aşırı"]},{"kind":"choice","title":"12.  Kolunuzda yaralanma /problem olduğundan bu yana oyun süreniz ne kadar azaldı?","options":["Hiç","Biraz","Orta düzeyde","Çok","Aşırı"]},{"kind":"choice","title":"13. Giyinmek için kolunuzu başınızın üzerine kaldırdığınızda ne kadar kısıtlanıyorsunuz?","options":["Hiç","Biraz","Orta düzeyde","Çok","Aşırı"]},{"kind":"choice","title":"14. Kolunuzda yaralanma /problem olduğundan beri hayattan aldığınız keyif azaldı mı?","options":["Hayır","Evet, hafif düzeyde","Evet, orta düzeyde","Evet, ciddi düzeyde","Evet, aşırı derecede"]},{"kind":"choice","title":"15. Kolunuzdaki yaralanma/problem tek bir antrenman veya maç sırasında atışa devam edebilme sürenizi azalttı mı?","options":["Hayır","Evet, hafif düzeyde","Evet, orta düzeyde","Evet, ciddi düzeyde","Evet, aşırı derecede"]},{"kind":"choice","title":"16. Kolunuzda yaralanma /problem olduğundan bu yana sportif başarılarınız azaldı mı?","options":["Hayır","Evet, hafif düzeyde","Evet, orta düzeyde","Evet, ciddi düzeyde","Evet, aşırı derecede"]},{"kind":"choice","title":"17.  Kolunuzdaki yaralanma/problem sebebiyle hayatınız daha stresli hale geldi mi?","options":["Hayır","Evet, hafif düzeyde","Evet, orta düzeyde","Evet, ciddi düzeyde","Evet, aşırı derecede"]},{"kind":"choice","title":"18. Kolunuzdaki yaralanma/problem “uzak mesafeye atış/fırlatma(servis, smaç, clear, şut)  ” yapabilme yeteneğinizi ne kadar kısıtladı?","options":["Hiç","Biraz","Orta düzeyde","Çok","Fırlatma yapamıyorum"]},{"kind":"choice","title":"19. Kolunuzda yaralanma /problem olduğundan  bu yana beri atış isabet oranınız ne ölçüde azaldı?","options":["Hiç","Biraz","Orta düzeyde","Çok","Fırlatma yapamıyorum"]},{"kind":"choice","title":"20. Atış/fırlatma (servis, smaç, clear, şut)  sırasında kolunuzu ne kadar zayıf hissediyorsunuz?","options":["Hiç","Biraz","Orta düzeyde","Çok","Fırlatma yapamıyorum"]},{"kind":"choice","title":"21. Maç temposunda/makisumum eforla atış/fırlatma (servis, smaç, clear, şut)  yaparken kolunuz ne kadar ağrılıdır?","options":["Hiç","Biraz","Orta düzeyde","Çok","Fırlatma yapamıyorum"]},{"kind":"choice","title":"%50–75 eforda atış/fırlatma yaparken kolunuz ne kadar ağrılıdır?","options":["Hiç","Biraz","Orta düzeyde","Çok","Fırlatma yapamıyorum"]},{"kind":"section","title":"Atıcı, Şutör, Smaçör Modülü"},{"kind":"choice","title":"A1. Kolunuzdaki yaralanma atış hızınızı ne kadar kısıtladı?","options":["Hiç","Biraz","Orta Düzeyde","Çok","Yapamıyorum"]},{"kind":"choice","title":"A2. Kolunuzdaki yaralanma “ısınma atışlarınızı” gerçekleştirebilmenizi ne kadar kısıtladı?","options":["Hiç","Biraz","Orta Düzeyde","Çok","Yapamıyorum"]},{"kind":"choice","title":"A3. Kolunuzdaki yaralanma hedeflediğiniz noktaları ‘isabetleme’ yeteneğinizi  ne kadar kısıtladı?","options":["Hiç","Biraz","Orta Düzeyde","Çok","Yapamıyorum"]},{"kind":"choice","title":"A4. Atış yapmak için sahaya/yarışa girme sırası  (rotasyon sırası) size  geldiğinde atış yapabilme yeteneğiniz ne kadar kısıtlandı?","options":["Hiç","Biraz","Orta Düzeyde","Çok","Yapamıyorum"]},{"kind":"choice","title":"A5. Kolunuzdaki yaralanma sonrasında genel olarak atış yapma istatistikleriniz ne ölçüde olumsuz etkilendi?","options":["Hiç","Biraz","Orta Düzeyde","Çok","Yapamıyorum"]},{"kind":"choice","title":"A6. Kolunuzdaki yaralanma sebebiyle toplam atış sayısınız ne kadar azaldı?","options":["Hiç","Biraz","Orta Düzeyde","Çok","Yapamıyorum"]},{"kind":"choice","title":"A7. Kolunuzdaki yaralanma farklı tiplerde atışları yapabilme yeteneğinizi ne kadar kısıtladı?","options":["Hiç","Biraz","Orta Düzeyde","Çok","Yapamıyorum"]},{"kind":"choice","title":"A8. Kolunuzdaki yaralanmadan sonra atış ‘hissinde’ bir azalma oldu mu?","options":["Hiç","Biraz","Orta Düzeyde","Çok","Yapamıyorum"]},{"kind":"choice","title":"A9.Kolunuzdaki problemin başlangıcından  sonra maç/yarış sırasındanki  sahada geçirilen süre dışında saha kenarında toparlanmak için daha fazla zamana ihtiyaç duyuyor musunuz ?","options":["Hiç","Biraz","Orta Düzeyde","Çok","Yapamıyorum"]},{"kind":"section","title":"Kerlan-Jobe Omuz ve Dirsek Skoru"},{"kind":"scale","title":"1.    Antrenman ya da müsabaka öncesinde gevşemek ya da ısınmak sizin için ne kadar zordur?","min":1,"max":10,"labels":["Antrenman ya da müsabaka süresince asla gevşemiş hissedilmez ","Normal ısınma süresi"]},{"kind":"scale","title":"2.    Omzunuzda ya da dirseğinizde ne kadar ağrı hissediyorsunuz?","min":1,"max":10,"labels":["",""]},{"kind":"scale","title":"3. Omzunuzda ya da dirseğinizde ne kadar zayıflık ve/veya yorgunluk (ör. kuvvet kaybı) hissediyorsunuz","min":1,"max":10,"labels":["Müsabakayı engelleyen zayıflık ya da yorgunluk","Zayıflık yok,normal müsabaka yorgunluğu"]},{"kind":"scale","title":"4. Müsabaka sırasında omzunuzu ya da dirseğinizi ne kadar güvensiz hissederdiniz?","min":1,"max":10,"labels":["",""]},{"kind":"scale","title":"5.Kolunuzdaki problemler antrenör, yönetim ve görevlilerle ilişkilerinizi ne kadar etkiledi?","min":1,"max":10,"labels":["Takımdan ayrılma,takas, sözleşme feshi ya da burs kaybı","Hiç etkilemedi"]},{"kind":"scale","title":"6.  Kolunuzdan dolayı fırlatma, servis, smaç gibi hareketlerde ne kadar değişiklik yapmak zorunda kaldınız?","min":1,"max":10,"labels":["Tamamen değişti, hareketi artık yapamıyor","Hareket değişikliği yok"]},{"kind":"scale","title":"7.Kolunuzdan dolayı hızınız ve/veya gücünüz ne kadar zarar gördü?","min":1,"max":10,"labels":["Tüm güçte kayıp, pozisyonda değişiklik.","Hız/güç değişikliği yok"]},{"kind":"scale","title":"8.Kolunuzdan dolayı müsabaka dayanıklılığınız ne kadar azaldı?","min":1,"max":10,"labels":["Belirgin azalma(yedek oyuncu olma,örneğin daha kısa sürede yarışma)","Müsabaka dayanıklılığında azalma yok"]},{"kind":"scale","title":"9.Kolunuzdan dolayı hareket hakimiyetinde (fırlatma, servis, smaç gibi hareketlerde) ne kadar bozulma oldu?","min":1,"max":10,"labels":["Tüm fırlatma, servis, smaç gibi hareketlerde öngörülemeyen hakimiyet kaybı.","Hakimiyet kaybı yok"]},{"kind":"scale","title":"10.Kolunuzun güncel spor yarışma seviyenizi ne kadar etkilediğini düşünüyorsunuz (ör. kolunuz tüm potansiyelinizi kullanmaktan sizi alıkoyuyor mu)?","min":1,"max":10,"labels":["Yarışamıyor,spor branşını değiştirmk zorunda kalmış.","İstenilen yarışma seviyesi"]},{"kind":"section","title":"QUİCK DASH"},{"kind":"scale","title":"1-Sıkı kapatılmış yada yeni bir kavanozu açmak","min":1,"max":5,"labels":["Zorluk yok","Hiç yapamama"]},{"kind":"scale","title":"2-Ağır ev işleri yapmak(duvar silmek, yer silmek,tamirat yapmak vs.)","min":1,"max":5,"labels":["Zorluk yok","Hiç yapamama"]},{"kind":"scale","title":"3-Alışveriş çantası yada evrak çantası taşımak","min":1,"max":5,"labels":["Zorluk yok","Hiç yapamama"]},{"kind":"scale","title":"4-Sırtını yıkamak","min":1,"max":5,"labels":["Zorluk yok","Hiç yapamama"]},{"kind":"scale","title":"5-Yiyecekleri kesmek için bıçak kullanmak","min":1,"max":5,"labels":["Zorluk yok","Hiç yapamama"]},{"kind":"scale","title":"6-Kolunuzdan, omzunuzdan veya elinizden güç aldığınız veya darbe vurduğunuz eğlenceye yönelik etkinlikler (önünüzde yerde bulunan bir konserve kutusu veya küçük bir taşa iki elinizle kavradığınız bir sopayla yandan vurmak,tenis oynamak,pinpon oynamak )","min":1,"max":5,"labels":["Zorluk yok","Hiç yapamama"]},{"kind":"scale","title":"7-Son hafta süresince kol omuz yada el probleminiz aile arkadaşlar, komşular veya gruplarla normal  sosyal etkinliklerinize ne ölçüde engel oldu ","min":1,"max":5,"labels":["Engel yok","Aşırı"]},{"kind":"scale","title":"8-Son hafta süresince kol omuz yada el sorununuz  nedeniyle işinizde yada diğer günlük etkinliklerde kısıtlandınız mı? ","min":1,"max":5,"labels":["Hiç kısıtlanmış hissetmiyorum","Bedensel etkinlik yapamyorum"]},{"kind":"scale","title":"9-El, omuz ya da kol ağrınız","min":1,"max":5,"labels":["Yok","Aşırı"]},{"kind":"scale","title":"10-El,omuz yada kolunuzdaki karıncalanma(iğnelenme) ","min":1,"max":5,"labels":["Yok","Aşırı"]},{"kind":"scale","title":"11-Geçen hafta içinde el, omuz yada kol ağrınız nedeniyle uyumada ne kadar zorlandınız ?","min":1,"max":5,"labels":["Zorluk yok","O kadar zorluk var ki uyuyamıyorum"]},{"kind":"section","title":"SPORCU MODÜLÜ"},{"kind":"scale","title":"1-Spor yaparken eski tekniğinizi kullanmada zorluğunuz oldu mu ? ","min":1,"max":5,"labels":["Zorluk yok","Hiç yapamama"]},{"kind":"scale","title":"2-Kolunuz, omzunuz ve el ağrınız nedeniyle  eskisi gibi  spor yapmada zorluğunuz oldu mu?","min":1,"max":5,"labels":["Zorluk yok","Hiç yapamama"]},{"kind":"scale","title":"3-İstediğiniz kadar iyi spor yapmada zorluğunuz oldu mu? ","min":1,"max":5,"labels":["Zorluk yok","Hiç yapamama"]},{"kind":"scale","title":"4- Her zamanki süre kadar  spor yaparken zorluğunuz oldu mu","min":1,"max":5,"labels":["Zorluk yok","Hiç yapamama"]}];
 
     const form = document.getElementById('survey');
@@ -361,7 +365,7 @@
       );
     }
 
-    function renderScale(q, idx) {
+    function renderScale(q, idx, step = 1) {
       const n = q.max - q.min + 1;
       const valueEl = el('span', { class: 'selected-label placeholder' }, 'Cevap için kaydırın');
       const slider = el('input', {
@@ -369,7 +373,7 @@
         class: 'slider',
         min: q.min,
         max: q.max,
-        step: 1,
+        step: step,
         'data-idx': idx,
         'data-kind': 'scale',
       });
@@ -377,9 +381,11 @@
       for (let i = 0; i < n; i++) {
         ticks.appendChild(el('span', {}, el('i', {}, String(q.min + i))));
       }
+      const decimals = step < 1 ? 1 : 0;
       function update() {
         if (slider.dataset.touched !== '1') return;
-        valueEl.textContent = `Seçilen: ${slider.value} / ${q.max}`;
+        const v = parseFloat(slider.value);
+        valueEl.textContent = `Seçilen: ${v.toFixed(decimals)} / ${q.max}`;
         valueEl.classList.remove('placeholder');
       }
       slider.addEventListener('input', () => {
@@ -410,12 +416,20 @@
       );
     }
 
+    const FINE_STEP_SECTION = 'Kerlan-Jobe Omuz ve Dirsek Skoru';
+    let currentSection = null;
     QUESTIONS.forEach((q, i) => {
       let node;
-      if (q.kind === 'section') node = renderSection(q);
+      if (q.kind === 'section') {
+        currentSection = q.title;
+        node = renderSection(q);
+      }
       else if (q.kind === 'text') node = renderText(q, i);
       else if (q.kind === 'choice') node = renderChoice(q, i);
-      else if (q.kind === 'scale') node = renderScale(q, i);
+      else if (q.kind === 'scale') {
+        const step = currentSection === FINE_STEP_SECTION ? 0.1 : 1;
+        node = renderScale(q, i, step);
+      }
       if (node) form.appendChild(node);
     });
 
@@ -461,7 +475,7 @@
           }
         } else if (q.kind === 'scale') {
           if (node.dataset.touched === '1') {
-            answers.push({ q: q.title, value: parseInt(node.value, 10) });
+            answers.push({ q: q.title, value: parseFloat(node.value) });
           } else {
             answers.push({ q: q.title, value: null });
           }
@@ -495,9 +509,46 @@
       return sectionRanges;
     }
 
-    submitBtn.addEventListener('click', () => {
+    const statusEl = document.getElementById('submitStatus');
+
+    async function sendToBackend(answers) {
+      if (!SUBMIT_ENDPOINT || SUBMIT_ENDPOINT.startsWith('__')) {
+        return { ok: false, reason: 'no-endpoint' };
+      }
+      try {
+        const res = await fetch(SUBMIT_ENDPOINT, {
+          method: 'POST',
+          mode: 'cors',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            submittedAt: new Date().toISOString(),
+            answers,
+          }),
+        });
+        if (!res.ok) return { ok: false, reason: 'http-' + res.status };
+        return { ok: true };
+      } catch (err) {
+        return { ok: false, reason: String(err) };
+      }
+    }
+
+    submitBtn.addEventListener('click', async () => {
       const answers = collectAnswers();
       const sections = computeScores(answers);
+
+      submitBtn.disabled = true;
+      statusEl.textContent = 'Gönderiliyor…';
+
+      const result = await sendToBackend(answers);
+
+      if (result.ok) {
+        statusEl.textContent = 'Gönderildi ✓';
+      } else if (result.reason === 'no-endpoint') {
+        statusEl.textContent = '(Sunucuya bağlanılmadı — sadece önizleme)';
+      } else {
+        statusEl.textContent = 'Gönderim hatası — tekrar deneyin';
+        submitBtn.disabled = false;
+      }
 
       resultEl.innerHTML = '';
       resultEl.appendChild(el('h2', {}, 'Teşekkürler!'));
@@ -507,10 +558,11 @@
       const scoresWrap = el('div', { class: 'scores' });
       sections.forEach(s => {
         if (s.count === 0) return;
+        const sumStr = Number.isInteger(s.sum) ? String(s.sum) : s.sum.toFixed(1);
         scoresWrap.appendChild(
           el('div', { class: 'score-row' },
             el('span', {}, s.title),
-            el('b', {}, `${s.sum} / ${s.max}`),
+            el('b', {}, `${sumStr} / ${s.max}`),
           )
         );
       });
