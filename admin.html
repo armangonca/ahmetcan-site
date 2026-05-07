@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Anket Yönetici Paneli</title>
+  <style>
+    :root {
+      --bg: #fafafa;
+      --card: #ffffff;
+      --ink: #111111;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --accent: #111111;
+      --accent-soft: #f3f4f6;
+      --danger: #dc2626;
+      --success: #059669;
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.5;
+    }
+    main {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 20px 120px;
+    }
+    h1 {
+      font-size: 24px;
+      margin: 0 0 8px;
+      letter-spacing: -0.01em;
+    }
+    h1 .small {
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 400;
+      letter-spacing: 0;
+    }
+    .intro {
+      color: var(--muted);
+      font-size: 14px;
+      margin: 0 0 20px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px;
+      margin: 12px 0;
+    }
+    label {
+      display: block;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+    input[type=text],
+    input[type=password],
+    input[type=number],
+    textarea,
+    select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      background: white;
+      color: var(--ink);
+      outline: none;
+      transition: border-color .15s;
+    }
+    input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+    textarea { resize: vertical; min-height: 60px; line-height: 1.5; }
+    .btn {
+      background: var(--accent);
+      color: white;
+      border: 0;
+      padding: 10px 18px;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: opacity .15s;
+    }
+    .btn:hover:not(:disabled) { opacity: .85; }
+    .btn:disabled { opacity: .4; cursor: not-allowed; }
+    .btn-secondary {
+      background: white;
+      color: var(--ink);
+      border: 1px solid var(--line);
+    }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-small { padding: 6px 12px; font-size: 13px; }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+    }
+    .question-card { position: relative; }
+    .question-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--line);
+    }
+    .question-num {
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--muted);
+    }
+    .actions { display: flex; gap: 6px; }
+    .field { margin-bottom: 12px; }
+    .field:last-child { margin-bottom: 0; }
+    .extra-fields {
+      background: var(--accent-soft);
+      border-radius: 8px;
+      padding: 12px;
+      margin-top: 10px;
+    }
+    .toolbar {
+      position: sticky;
+      bottom: 16px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 6px 24px rgba(0,0,0,.10);
+      margin-top: 24px;
+    }
+    .toolbar .actions { gap: 8px; }
+    .status { font-size: 13px; color: var(--muted); }
+    .status.success { color: var(--success); }
+    .status.error { color: var(--danger); }
+    .add-row { display: flex; gap: 8px; margin-top: 8px; }
+    @media (max-width: 540px) {
+      main { padding: 24px 14px 120px; }
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+      .toolbar { flex-direction: column; gap: 10px; align-items: stretch; }
+      .toolbar .actions { width: 100%; }
+      .toolbar .actions .btn { flex: 1; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div id="loginScreen" class="card" style="max-width:420px;margin:80px auto;">
+      <h1>Yönetici Girişi</h1>
+      <p class="intro">Anket sorularını düzenlemek için yönetici şifresini girin.</p>
+      <div class="field">
+        <label>Şifre</label>
+        <input id="pwInput" type="password" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <button id="loginBtn" class="btn" style="width:100%">Giriş yap</button>
+      <p id="loginError" class="status error" style="display:none;margin-top:10px"></p>
+    </div>
+
+    <div id="panel" hidden>
+      <h1>Anket Soruları <span class="small">(düzenle, sırala, ekle)</span></h1>
+      <p class="intro">
+        Değişiklikleriniz <b>Kaydet</b> butonuna basınca anket sayfasında geçerli olur.
+        Önemli: Veri toplama sürerken soru ekleme/silme tablodaki sütun düzenini bozabilir.
+      </p>
+      <div id="questionList"></div>
+
+      <div class="add-row">
+        <button id="addBtn" class="btn btn-secondary">+ Yeni soru ekle</button>
+      </div>
+
+      <div class="toolbar">
+        <span id="statusEl" class="status">Hazır</span>
+        <div class="actions">
+          <button id="reloadBtn" class="btn btn-secondary">Yenile</button>
+          <button id="saveBtn" class="btn">Kaydet</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const SUBMIT_ENDPOINT = 'https://script.google.com/macros/s/AKfycbzIWIkOTRbCA_m0F2IVrPuiyeSVY752RteodsacN_lXmZKZqEmBvRrHwTM_g7XfBjGh/exec';
+
+    let password = '';
+    let questions = [];
+
+    const pwInput = document.getElementById('pwInput');
+    const loginBtn = document.getElementById('loginBtn');
+    const loginError = document.getElementById('loginError');
+    const panel = document.getElementById('panel');
+    const loginScreen = document.getElementById('loginScreen');
+    const questionList = document.getElementById('questionList');
+    const statusEl = document.getElementById('statusEl');
+    const addBtn = document.getElementById('addBtn');
+    const saveBtn = document.getElementById('saveBtn');
+    const reloadBtn = document.getElementById('reloadBtn');
+
+    async function api(action, payload = {}) {
+      try {
+        const res = await fetch(SUBMIT_ENDPOINT, {
+          method: 'POST',
+          mode: 'cors',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action, password, ...payload }),
+        });
+        return await res.json();
+      } catch (err) {
+        return { ok: false, error: String(err) };
+      }
+    }
+
+    async function login() {
+      password = pwInput.value;
+      loginError.style.display = 'none';
+      loginBtn.disabled = true;
+      loginBtn.textContent = 'Giriş yapılıyor…';
+
+      const result = await api('admin_load');
+
+      loginBtn.disabled = false;
+      loginBtn.textContent = 'Giriş yap';
+
+      if (result.ok) {
+        questions = result.questions || [];
+        loginScreen.hidden = true;
+        panel.hidden = false;
+        renderList();
+      } else if (result.reason === 'auth') {
+        loginError.textContent = 'Şifre yanlış';
+        loginError.style.display = 'block';
+      } else {
+        loginError.textContent = 'Hata: ' + (result.error || 'bağlantı sorunu');
+        loginError.style.display = 'block';
+      }
+    }
+
+    loginBtn.addEventListener('click', login);
+    pwInput.addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+
+    function setStatus(text, kind = '') {
+      statusEl.textContent = text;
+      statusEl.className = 'status' + (kind ? ' ' + kind : '');
+    }
+
+    function renderList() {
+      questionList.innerHTML = '';
+      if (questions.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'card';
+        empty.style.textAlign = 'center';
+        empty.style.color = 'var(--muted)';
+        empty.textContent = 'Henüz soru yok. "+ Yeni soru ekle" ile başlayın.';
+        questionList.appendChild(empty);
+      }
+      questions.forEach((q, i) => {
+        questionList.appendChild(renderQuestionCard(q, i));
+      });
+    }
+
+    function field(labelText, makeInput) {
+      const wrap = document.createElement('div');
+      wrap.className = 'field';
+      const lbl = document.createElement('label');
+      lbl.textContent = labelText;
+      wrap.appendChild(lbl);
+      wrap.appendChild(makeInput());
+      return wrap;
+    }
+
+    function renderQuestionCard(q, idx) {
+      const card = document.createElement('div');
+      card.className = 'card question-card';
+
+      const header = document.createElement('div');
+      header.className = 'question-header';
+
+      const num = document.createElement('span');
+      num.className = 'question-num';
+      num.textContent = `Soru ${idx + 1} • ${q.kind}`;
+
+      const actions = document.createElement('div');
+      actions.className = 'actions';
+
+      const upBtn = document.createElement('button');
+      upBtn.className = 'btn btn-secondary btn-small';
+      upBtn.textContent = '↑';
+      upBtn.title = 'Yukarı taşı';
+      upBtn.disabled = idx === 0;
+      upBtn.addEventListener('click', () => move(idx, -1));
+
+      const downBtn = document.createElement('button');
+      downBtn.className = 'btn btn-secondary btn-small';
+      downBtn.textContent = '↓';
+      downBtn.title = 'Aşağı taşı';
+      downBtn.disabled = idx === questions.length - 1;
+      downBtn.addEventListener('click', () => move(idx, 1));
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'btn btn-danger btn-small';
+      delBtn.textContent = 'Sil';
+      delBtn.addEventListener('click', () => {
+        if (confirm(`"${q.title || '(başlıksız)'}" sorusunu silmek istiyor musunuz?`)) {
+          questions.splice(idx, 1);
+          renderList();
+        }
+      });
+
+      actions.appendChild(upBtn);
+      actions.appendChild(downBtn);
+      actions.appendChild(delBtn);
+      header.appendChild(num);
+      header.appendChild(actions);
+      card.appendChild(header);
+
+      // Tip
+      card.appendChild(field('Soru tipi', () => {
+        const sel = document.createElement('select');
+        const types = [
+          { v: 'text', l: 'text — kısa metin / sayı' },
+          { v: 'choice', l: 'choice — seçenekli (radio button)' },
+          { v: 'scale', l: 'scale — kaydırmalı ölçek' },
+          { v: 'section', l: 'section — bölüm başlığı' },
+        ];
+        types.forEach(t => {
+          const opt = document.createElement('option');
+          opt.value = t.v; opt.textContent = t.l;
+          if (t.v === q.kind) opt.selected = true;
+          sel.appendChild(opt);
+        });
+        sel.addEventListener('change', () => {
+          q.kind = sel.value;
+          if (q.kind === 'choice' && !q.options) q.options = [];
+          if (q.kind === 'scale') {
+            if (!q.min) q.min = 1;
+            if (!q.max) q.max = 10;
+            if (!q.labels) q.labels = ['', ''];
+          }
+          renderList();
+        });
+        return sel;
+      }));
+
+      // Başlık
+      card.appendChild(field(q.kind === 'section' ? 'Bölüm başlığı' : 'Soru metni', () => {
+        const ta = document.createElement('textarea');
+        ta.value = q.title || '';
+        ta.addEventListener('input', () => { q.title = ta.value; });
+        return ta;
+      }));
+
+      if (q.kind === 'choice') {
+        card.appendChild(field('Seçenekler (her satıra bir tane)', () => {
+          const ta = document.createElement('textarea');
+          ta.value = (q.options || []).join('\n');
+          ta.style.minHeight = '120px';
+          ta.addEventListener('input', () => {
+            q.options = ta.value.split('\n').map(s => s.trim()).filter(Boolean);
+          });
+          return ta;
+        }));
+      }
+
+      if (q.kind === 'scale') {
+        const extra = document.createElement('div');
+        extra.className = 'extra-fields';
+
+        const grid = document.createElement('div');
+        grid.className = 'grid-3';
+
+        grid.appendChild(field('Min değer', () => {
+          const i = document.createElement('input');
+          i.type = 'number';
+          i.value = q.min ?? 1;
+          i.addEventListener('input', () => { q.min = Number(i.value); });
+          return i;
+        }));
+
+        grid.appendChild(field('Max değer', () => {
+          const i = document.createElement('input');
+          i.type = 'number';
+          i.value = q.max ?? 10;
+          i.addEventListener('input', () => { q.max = Number(i.value); });
+          return i;
+        }));
+
+        grid.appendChild(field('Adım (boş = 1)', () => {
+          const i = document.createElement('input');
+          i.type = 'number';
+          i.step = '0.1';
+          i.placeholder = '1 veya 0.1';
+          i.value = q.step || '';
+          i.addEventListener('input', () => {
+            const v = Number(i.value);
+            if (v > 0) q.step = v;
+            else delete q.step;
+          });
+          return i;
+        }));
+
+        extra.appendChild(grid);
+
+        const grid2 = document.createElement('div');
+        grid2.className = 'grid-2';
+
+        grid2.appendChild(field('Sol etiket (min)', () => {
+          const i = document.createElement('input');
+          i.type = 'text';
+          i.value = (q.labels && q.labels[0]) || '';
+          i.addEventListener('input', () => {
+            if (!q.labels) q.labels = ['', ''];
+            q.labels[0] = i.value;
+          });
+          return i;
+        }));
+
+        grid2.appendChild(field('Sağ etiket (max)', () => {
+          const i = document.createElement('input');
+          i.type = 'text';
+          i.value = (q.labels && q.labels[1]) || '';
+          i.addEventListener('input', () => {
+            if (!q.labels) q.labels = ['', ''];
+            q.labels[1] = i.value;
+          });
+          return i;
+        }));
+
+        extra.appendChild(grid2);
+        card.appendChild(extra);
+      }
+
+      return card;
+    }
+
+    function move(idx, dir) {
+      const newIdx = idx + dir;
+      if (newIdx < 0 || newIdx >= questions.length) return;
+      const tmp = questions[idx];
+      questions[idx] = questions[newIdx];
+      questions[newIdx] = tmp;
+      renderList();
+    }
+
+    addBtn.addEventListener('click', () => {
+      questions.push({ kind: 'text', title: '' });
+      renderList();
+      const cards = questionList.querySelectorAll('.question-card');
+      const last = cards[cards.length - 1];
+      if (last) {
+        last.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const ta = last.querySelector('textarea');
+        if (ta) setTimeout(() => ta.focus(), 300);
+      }
+    });
+
+    saveBtn.addEventListener('click', async () => {
+      // Boş başlıkları uyar
+      const emptyTitles = questions.filter(q => !q.title || !q.title.trim()).length;
+      if (emptyTitles > 0) {
+        if (!confirm(`${emptyTitles} sorunun başlığı boş. Yine de kaydedilsin mi?`)) return;
+      }
+
+      saveBtn.disabled = true;
+      setStatus('Kaydediliyor…');
+      const result = await api('admin_save', { questions });
+      saveBtn.disabled = false;
+
+      if (result.ok) {
+        setStatus('Kaydedildi ✓', 'success');
+      } else {
+        setStatus('Hata: ' + (result.error || result.reason || 'bilinmiyor'), 'error');
+      }
+    });
+
+    reloadBtn.addEventListener('click', async () => {
+      if (!confirm('Kaydedilmemiş değişiklikler kaybolur. Devam edilsin mi?')) return;
+      setStatus('Yenileniyor…');
+      const result = await api('admin_load');
+      if (result.ok) {
+        questions = result.questions || [];
+        renderList();
+        setStatus('Yenilendi', 'success');
+      } else {
+        setStatus('Hata: ' + (result.error || 'bilinmiyor'), 'error');
+      }
+    });
+
+    pwInput.focus();
+  </script>
+</body>
+</html>
