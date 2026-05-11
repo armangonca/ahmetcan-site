@@ -19,7 +19,7 @@
     html, body { margin: 0; padding: 0; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Helvetica, Arial, sans-serif;
-      background: var(--bg);
+      background: #C8A2C8;
       color: var(--ink);
       line-height: 1.5;
       -webkit-font-smoothing: antialiased;
@@ -28,7 +28,7 @@
       position: sticky;
       top: 0;
       height: 3px;
-      background: var(--line);
+      background: rgba(255,255,255,0.4);
       z-index: 50;
     }
     .progress-bar > span {
@@ -47,26 +47,37 @@
       margin-bottom: 32px;
     }
     header.intro h1 {
-      font-size: 28px;
+      font-size: 32px;
       letter-spacing: -0.02em;
-      margin: 0 0 12px;
-      font-weight: 700;
+      margin: 0 0 20px;
+      font-weight: 800;
+      line-height: 1.2;
+      color: #ffffff;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.08);
+      text-wrap: balance;
     }
-    header.intro p {
-      color: var(--muted);
+    header.intro .desc {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 20px 22px;
+      color: var(--ink);
       font-size: 15px;
       margin: 0;
+      line-height: 1.55;
     }
     .section-divider {
       margin: 40px 0 16px;
       padding-top: 24px;
-      border-top: 1px solid var(--line);
+      border-top: 1px solid rgba(255,255,255,0.5);
     }
     .section-divider h2 {
-      font-size: 18px;
+      font-size: 20px;
       margin: 0;
       letter-spacing: -0.01em;
-      font-weight: 600;
+      font-weight: 700;
+      color: #ffffff;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.08);
     }
     .card {
       background: var(--card);
@@ -280,8 +291,8 @@
   <div class="progress-bar"><span id="progress"></span></div>
   <main>
     <header class="intro">
-      <h1>Fırlatma Sporcuları için Fonksiyonel Kol Ölçeği</h1>
-      <p>
+      <h1 id="surveyTitle">Fırlatma Sporcuları için Fonksiyonel Kol Ölçeği</h1>
+      <p id="surveyDesc" class="desc">
         Bu anket, Hacettepe Üniversitesi Spor Fizyoterapistliği Tezi kapsamında
         FAST-TR anketinin geçerlilik ve güvenirliğini değerlendirmek amacıyla
         hazırlanmıştır. Anketi cevaplamanız 10–15 dakika sürecek olup verdiğiniz
@@ -297,11 +308,11 @@
       </p>
     </div>
 
-    <div id="loadingState" style="text-align:center;color:var(--muted);padding:40px 0;font-size:15px;">
+    <div id="loadingState" style="text-align:center;color:#ffffff;padding:40px 0;font-size:15px;font-weight:500;">
       Sorular yükleniyor…
     </div>
 
-    <div id="loadError" hidden style="text-align:center;color:#991b1b;padding:40px 0;font-size:15px;">
+    <div id="loadError" hidden style="text-align:center;color:#ffffff;background:#991b1b;border-radius:10px;padding:16px;margin-top:16px;font-size:15px;">
       Sorular yüklenemedi. Sayfayı yenileyin.
     </div>
 
@@ -310,7 +321,7 @@
     <div id="errorBanner" class="error-banner" role="alert"></div>
 
     <div class="submit-row" id="submitRow" hidden>
-      <span id="submitStatus" style="margin-right:14px;color:var(--muted);font-size:14px;align-self:center;"></span>
+      <span id="submitStatus" style="margin-right:14px;color:#ffffff;font-size:14px;align-self:center;font-weight:500;"></span>
       <button type="button" class="btn" id="submitBtn">Gönder</button>
     </div>
 
@@ -319,7 +330,7 @@
 
   <script>
     // Apps Script web app URL — kurulum sonrası buraya yapıştır
-    const SUBMIT_ENDPOINT = 'https://script.google.com/macros/s/AKfycbzIWIkOTRbCA_m0F2IVrPuiyeSVY752RteodsacN_lXmZKZqEmBvRrHwTM_g7XfBjGh/exec';
+    const SUBMIT_ENDPOINT = 'https://script.google.com/macros/s/AKfycbx3fFpBSqlbk88RxSd7kyH1Ocd1uzmcHgbrJ9toXe_k_robff_lVXJUv1xhXuC7TFq1bw/exec';
 
     // Sorular backend'den (Apps Script + Google Sheet) yükleniyor.
     // Yönetici panelinden (admin.html) düzenlenebilir.
@@ -487,6 +498,15 @@
           throw new Error('empty');
         }
         QUESTIONS = data.questions;
+        if (data.settings) {
+          if (data.settings.title) {
+            document.getElementById('surveyTitle').textContent = data.settings.title;
+            document.title = data.settings.title;
+          }
+          if (data.settings.description) {
+            document.getElementById('surveyDesc').textContent = data.settings.description;
+          }
+        }
         renderForm();
         loadingState.hidden = true;
         form.hidden = false;

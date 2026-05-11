@@ -173,11 +173,27 @@
     </div>
 
     <div id="panel" hidden>
-      <h1>Anket Soruları <span class="small">(düzenle, sırala, ekle)</span></h1>
+      <h1>Anket Yönetici Paneli <span class="small">(başlık, açıklama, sorular)</span></h1>
       <p class="intro">
         Değişiklikleriniz <b>Kaydet</b> butonuna basınca anket sayfasında geçerli olur.
         Önemli: Veri toplama sürerken soru ekleme/silme tablodaki sütun düzenini bozabilir.
       </p>
+
+      <div class="card">
+        <div class="question-header">
+          <span class="question-num">Anket başlığı ve açıklaması</span>
+        </div>
+        <div class="field">
+          <label>Başlık</label>
+          <input id="titleInput" type="text" placeholder="Anket başlığı">
+        </div>
+        <div class="field">
+          <label>Açıklama (anket sayfasında başlığın altında görünür)</label>
+          <textarea id="descInput" rows="5" placeholder="Anketin amacını ve süresini açıklayan metin"></textarea>
+        </div>
+      </div>
+
+      <h2 style="font-size:18px;margin:28px 0 8px;">Sorular</h2>
       <div id="questionList"></div>
 
       <div class="add-row">
@@ -195,10 +211,11 @@
   </main>
 
   <script>
-    const SUBMIT_ENDPOINT = 'https://script.google.com/macros/s/AKfycbzIWIkOTRbCA_m0F2IVrPuiyeSVY752RteodsacN_lXmZKZqEmBvRrHwTM_g7XfBjGh/exec';
+    const SUBMIT_ENDPOINT = 'https://script.google.com/macros/s/AKfycbx3fFpBSqlbk88RxSd7kyH1Ocd1uzmcHgbrJ9toXe_k_robff_lVXJUv1xhXuC7TFq1bw/exec';
 
     let password = '';
     let questions = [];
+    let settings = { title: '', description: '' };
 
     const pwInput = document.getElementById('pwInput');
     const loginBtn = document.getElementById('loginBtn');
@@ -210,6 +227,11 @@
     const addBtn = document.getElementById('addBtn');
     const saveBtn = document.getElementById('saveBtn');
     const reloadBtn = document.getElementById('reloadBtn');
+    const titleInput = document.getElementById('titleInput');
+    const descInput = document.getElementById('descInput');
+
+    titleInput.addEventListener('input', () => { settings.title = titleInput.value; });
+    descInput.addEventListener('input', () => { settings.description = descInput.value; });
 
     async function api(action, payload = {}) {
       try {
@@ -238,6 +260,9 @@
 
       if (result.ok) {
         questions = result.questions || [];
+        settings = result.settings || { title: '', description: '' };
+        titleInput.value = settings.title || '';
+        descInput.value = settings.description || '';
         loginScreen.hidden = true;
         panel.hidden = false;
         renderList();
@@ -477,7 +502,7 @@
 
       saveBtn.disabled = true;
       setStatus('Kaydediliyor…');
-      const result = await api('admin_save', { questions });
+      const result = await api('admin_save', { questions, settings });
       saveBtn.disabled = false;
 
       if (result.ok) {
@@ -493,6 +518,9 @@
       const result = await api('admin_load');
       if (result.ok) {
         questions = result.questions || [];
+        settings = result.settings || { title: '', description: '' };
+        titleInput.value = settings.title || '';
+        descInput.value = settings.description || '';
         renderList();
         setStatus('Yenilendi', 'success');
       } else {
